@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: fintrack-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '0402'
+      POSTGRES_DB: fintrack
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fintrack"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fintrack-network
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: fintrack-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - fintrack-network
+
+  app:
+    build: .
+    container_name: fintrack-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/fintrack
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: '0402'
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATA_REDIS_HOST: fintrack-redis # Pointing to the service name
+      SPRING_DATA_REDIS_PORT: 6379
+    networks:
+      - fintrack-network
+
+# This must be at the very bottom, aligned to the far left
+networks:
+  fintrack-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
