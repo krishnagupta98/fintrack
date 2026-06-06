@@ -36,14 +36,13 @@ public class ExpenseController {
 
     @PostMapping
     public ResponseEntity<Expense> addNewExpense(@Valid @RequestBody ExpenseRequest request, Principal principal) {
-        String username = principal.getName();
         Expense savedExpense = service.saveExpense(request);
         return new ResponseEntity<>(savedExpense, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Expense> update(@PathVariable("id") long expenseId,
-                                          @RequestBody Expense newExpense) {
+                                         @Valid @RequestBody Expense newExpense) {
         Expense updated = service.updatedexpense(expenseId, newExpense);
         return ResponseEntity.ok(updated);
     }

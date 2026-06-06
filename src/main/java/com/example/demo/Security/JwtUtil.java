@@ -1,11 +1,10 @@
 package com.example.demo.Security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.aspectj.weaver.patterns.IToken;
+
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -16,13 +15,23 @@ import java.util.function.Function;
 public class JwtUtil {
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    private final long jwtExpirationtime = 86400000;
+    private final long accessTokenExpiry = 900000;
+    private final long refreshTokenExpiry = 604800000;
 
-    public String generateToken(String username){
+    public String generateRefreshToken (String username){
+      return Jwts.builder()
+              .setSubject(username)
+              .setIssuedAt(new Date(System.currentTimeMillis()))
+              .setExpiration(new Date(System.currentTimeMillis()+refreshTokenExpiry))
+              .signWith(key)
+              .compact();
+    }
+
+    public String generateAccessToken(String username){
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+jwtExpirationtime))
+                .setExpiration(new Date(System.currentTimeMillis()+accessTokenExpiry))
                 .signWith(key)
                 .compact();
     }
@@ -51,6 +60,9 @@ public class JwtUtil {
                 .getBody();
 
         return claimresolver.apply(claims);
+    }
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
 }

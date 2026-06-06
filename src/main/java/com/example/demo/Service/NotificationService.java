@@ -34,23 +34,22 @@ public class NotificationService {
 
          try{
              log.info("Processing notification ID: {}", logEntry.getId());
-            Thread.sleep(3000);
+
 
             logEntry.setStatus("SENT");
             log.info("SUCCESS : Noticafication {} delivered." , logEntry.getId());
             repository.save(logEntry);
 
 
-         } catch (InterruptedException e) {
+         } catch (Exception e) {
              logEntry.setStatus("FAILED");
              repository.save(logEntry);
              log.error("ERROR: Failed to send notification {}: {}", logEntry.getId(), e.getMessage());
-             Thread.currentThread().interrupt();
          }
     }
 
     @Cacheable(value = "notifications2",key = "#userId")
     public List<NotificationLog> getnotifications(String userId){
-        log.info("cache miss: fetching notification history for user {}");
+        log.info("cache miss: fetching notification history for user {}",userId);
         return repository.findByUserId(userId);    }
 }

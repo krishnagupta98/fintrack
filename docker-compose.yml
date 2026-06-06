@@ -37,12 +37,14 @@ services:
       db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/fintrack
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: '0402'
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: fintrack
+      DB_USERNAME: postgres
+      DB_PASSWORD: '0402'
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_DATA_REDIS_HOST: fintrack-redis # Pointing to the service name
-      SPRING_DATA_REDIS_PORT: 6379
     networks:
       - fintrack-network
 

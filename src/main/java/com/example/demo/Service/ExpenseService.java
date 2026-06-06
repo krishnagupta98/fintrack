@@ -15,6 +15,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Caching;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -42,8 +43,10 @@ public class ExpenseService {
         return userRepo.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("user not found " + username));
     }
-    @CacheEvict(value = "expenseSummary", key = "#root.target.getTheUser().id")
-    public Expense saveExpense(ExpenseRequest request) {
+    @Caching(evict = {
+            @CacheEvict(value = "expenseSummary", key = "#result.user.id"),
+            @CacheEvict(value = "userExpenses", key = "#result.user.id")
+    })    public Expense saveExpense(ExpenseRequest request) {
         User currentUser = getTheUser();
 
         Expense expense = new Expense();
@@ -57,11 +60,12 @@ public class ExpenseService {
 
         if(expense.getAmount() > 5000){
             notificationService.sendAsyncNotification(
-            new NotificationRequest(currentUser.getUsername(),"Alert : high amount of " + expense.getAmount() + "added.",1)
+                    new NotificationRequest(currentUser.getUsername(),"Alert : high amount of " + expense.getAmount() + "added.",1)
             );
         }
         return repo.save(expense);
     }
+    @Cacheable(value = "userExpenses", key = "#root.target.getTheUser().id")
 
     public List<Expense> getallexpenses() {
         User currentUser = getTheUser();
@@ -74,8 +78,11 @@ public class ExpenseService {
                 .filter(expense -> expense.getUser().getId().equals(currentUser.getId()))
                 .orElseThrow(() -> new  ResourceNotFoundException("expense not found " + expenseid));
     }
-        @Transactional
-        @CacheEvict(value = "expenseSummary", key = "#root.target.getTheUser().id")
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "expenseSummary", key = "#result.user.id"),
+            @CacheEvict(value = "userExpenses", key = "#result.user.id")
+    })
     public Expense updatedexpense(long expenseid, Expense newexpense) {
         User currentUser = getTheUser();
         return repo.findById(expenseid)
@@ -89,8 +96,11 @@ public class ExpenseService {
                     return repo.save(existing);
                 }).orElseThrow(() -> new ResourceNotFoundException("cannot update : user not found or unauthorised id" + expenseid));
     }
-        @Transactional
-        @CacheEvict(value = "expenseSummary", key = "#root.target.getTheUser().id")
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "expenseSummary", allEntries = true),
+            @CacheEvict(value = "userExpenses", allEntries = true)
+    })
     public void deletebyid(long expenseid) {
         User currentUser = getTheUser();
         Expense expense = repo.findById(expenseid)
@@ -102,7 +112,7 @@ public class ExpenseService {
 
         repo.deleteById(expenseid);
     }
-
+    @Cacheable(value = "expenseSummary" , key = "#root.target.getTheUser().id")
     public ExpenseSummaryDTO summaryDTO() {
         User currentUser = getTheUser();
         List<Expense> userExpenses = repo.findByUser(currentUser);
@@ -123,9 +133,9 @@ public class ExpenseService {
     }
 
     @Cacheable (value = "expenseSummary", key = "#userid")
-    public double getTotalExpenses(long L) {
-    logger.info("Cache missing : fetching from the db for user {}",L);
-        List<Expense> expenses = repo.findByUserId(L);
+    public double getTotalExpenses(Long userid) {
+        logger.info("Cache missing : fetching from the db for user {}",userid);
+        List<Expense> expenses = repo.findByUserId(userid);
 
         return expenses.stream()
                 .mapToDouble(Expense::getAmount)

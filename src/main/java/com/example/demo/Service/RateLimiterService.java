@@ -27,6 +27,7 @@ public class RateLimiterService {
 
         redisTemplate.opsForZSet().removeRangeByScore(key, 0, windowStart);
         Long currentCount = redisTemplate.opsForZSet().zCard(key);
+        redisTemplate.expire(key, Duration.ofMinutes(2));
 
         if (currentCount != null && currentCount >= MAX_REQUESTS) {
             log.warn("Rate limit exceeded for user: {}", userId);
@@ -34,7 +35,6 @@ public class RateLimiterService {
         }
 
         redisTemplate.opsForZSet().add(key,String.valueOf(now),now);
-        redisTemplate.expire(key, Duration.ofMinutes(2));
 
         return true;
     }
