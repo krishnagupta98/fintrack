@@ -1,3 +1,12 @@
+---
+title: fintrack-backend
+emoji: 💰
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # FinTrack 💰
 > A production-ready personal expense tracking REST API built with Spring Boot.
 
