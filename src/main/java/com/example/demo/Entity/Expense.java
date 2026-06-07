@@ -2,13 +2,14 @@ package com.example.demo.Entity;
 import jakarta.annotation.Generated;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "expenses")
 
-public class Expense {
-
+public class Expense implements Serializable {
+    private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
