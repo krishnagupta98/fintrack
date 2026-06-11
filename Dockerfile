@@ -18,4 +18,5 @@ RUN chown -R postgres:postgres /etc/pgbouncer && \
 ENTRYPOINT ["/bin/sh", "-c", \
     "redis-server --daemonize yes --maxmemory 512mb --maxmemory-policy allkeys-lru && \
     su postgres -s /bin/sh -c 'pgbouncer -d /etc/pgbouncer/pgbouncer.ini' && \
+    sleep 3 && \
     java -Xms512m -Xmx2g -jar app.jar"]
